@@ -1,6 +1,7 @@
 #pragma once
 #include "protokol.h"
 
+int odsw = 0;
 class klient
 {
 public:
@@ -12,6 +13,8 @@ public:
 	sf::UdpSocket socket;
 	sf::Uint8 identyfikatorSesji;
 	bool finish;
+	
+
 
 	void run()
 	{
@@ -44,17 +47,22 @@ public:
 		pakiet t;
 		t.komunikaty.ID = 1;
 		sendpakiet(t);
+		
 
 		//odbiór danych
 		while (!finish)
 		{
+			
+			//std:: thread thr(odswiez); 
+			//std::thread thr2(menu1);
+			
+			//thr.join();
 			pakiet aktualny_pakiet;
 			sf::Socket::Status status;
-
 			for (int i = 0; i < 10; i++)
 			{
 				sf::sleep(sf::milliseconds(100));
-				aktualny_pakiet.clear();
+				
 				status = receivepakiet(aktualny_pakiet);
 
 				if (status == sf::Socket::Done)
@@ -63,20 +71,15 @@ public:
 					if (aktualny_pakiet.komunikaty.ACK)
 					{
 						identyfikatorSesji = aktualny_pakiet.identyfikator;
+						if (identyfikatorSesji == 0) {
+							std::cout << "Proba podlaczenia zbyt duzej liczby klientow!";
+							sf::sleep(sf::milliseconds(3000));
+							system("cls");
+							run();
+						}
 					}
-					if (aktualny_pakiet.komunikaty.Z_TAK && aktualny_pakiet.komunikaty.Z_NIE)
-					{
-						std::cout << "brak komunikacji z drugim klientem" << std::endl;
-					}
-					else if (aktualny_pakiet.komunikaty.Z_TAK)
-					{
-						std::cout << "drugi klient przyjal zaproszenie" << std::endl;
-					}
-					else if (aktualny_pakiet.komunikaty.Z_NIE)
-					{
-						std::cout << "drugi klient odrzucil zaproszenie" << std::endl;
-					}
-					else if (aktualny_pakiet.komunikaty.ZAPR)
+					
+					if (aktualny_pakiet.komunikaty.ZAPR)
 					{
 						int w;
 						std::cout << "zaproszenie do polaczenia od drugiego klienta   \njesli przyjmujesz zaproszenie wcisnij 1,   \njesli nie przyjmujesz zaproszenia wcisnij 0" << std::endl;
@@ -99,10 +102,12 @@ public:
 						std::cout << "wiadomosc od drugiego klienta: " << aktualny_pakiet.getText() << std::endl;
 					}
 				}
+				aktualny_pakiet.clear();
 			}
 
 			// interfejs klienta
 			{
+
 				unsigned int menu = 0;
 				std::cout << " Wyslij zaproszenie -> 1\n Wyslij wiadomosc -> 2\n Wyswitl ID -> 3\n Odswiez -> 4\n Zakoncz -> 5\n" << std::endl;
 				std::cin >> menu;
@@ -115,6 +120,32 @@ public:
 					kom = pakiet();
 					kom.komunikaty.ZAPR = 1;
 					sendpakiet(kom);
+
+					aktualny_pakiet.clear();
+					
+					while (!status == sf::Socket::Done) {
+						sf::sleep(sf::milliseconds(1000));
+						status = receivepakiet(aktualny_pakiet);
+					}
+
+					aktualny_pakiet.clear();
+					status = receivepakiet(aktualny_pakiet);
+					while (!status == sf::Socket::Done) {
+						sf::sleep(sf::milliseconds(1000));
+						status = receivepakiet(aktualny_pakiet);
+						if (aktualny_pakiet.komunikaty.Z_TAK && aktualny_pakiet.komunikaty.Z_NIE)
+						{
+							std::cout << "brak komunikacji z drugim klientem" << std::endl;
+						}
+						else if (aktualny_pakiet.komunikaty.Z_TAK)
+						{
+							std::cout << "drugi klient przyjal zaproszenie" << std::endl;
+						}
+						else if (aktualny_pakiet.komunikaty.Z_NIE)
+						{
+							std::cout << "drugi klient odrzucil zaproszenie" << std::endl;
+						}
+					}
 					break;
 				}
 				case 2: {
@@ -153,6 +184,8 @@ public:
 				}
 				}
 			}
+		
+			
 		}
 		// wy³¹czenie programu po odebraniu ostatniego ACK
 		pakiet a;
@@ -161,6 +194,7 @@ public:
 
 		sf::sleep(sf::seconds(5));
 	}
+
 
 	// funkcja wysy³aj¹ca pakiet
 	void sendpakiet(pakiet p)

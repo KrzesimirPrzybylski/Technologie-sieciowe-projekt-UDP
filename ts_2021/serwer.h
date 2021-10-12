@@ -136,8 +136,10 @@ public:
 						else
 						{
 							std::cout << "proba poloczenia zbyt duzej liczby klientow" << std::endl;
-							std::cin.ignore(2);
-							exit(-1);
+							odpowiedz.identyfikator = 0;
+							odpowiedz.komunikaty.ACK = 1;
+							sendpakiet(odpowiedz, aktualny_klient);
+							break;
 						}
 					}
 

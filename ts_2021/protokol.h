@@ -11,9 +11,10 @@
 #include <algorithm>
 #include <locale.h>
 #include <boost/dynamic_bitset.hpp>
+#include <thread>
 
 const unsigned int rozmiarBufora = 4096;
-             
+
 // Funkcja odwraca kolejnoœæ bitów
 template <std::size_t s>
 void bitReverse(std::bitset<s>& b)
